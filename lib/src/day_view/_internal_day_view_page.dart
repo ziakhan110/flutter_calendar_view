@@ -98,6 +98,9 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
   /// Settings for half hour indicator lines.
   final HourIndicatorSettings halfHourIndicatorSettings;
 
+  /// First hour displayed in the layout
+  final int startHour;
+
   final ScrollController scrollController;
 
   /// Defines a single day page.
@@ -129,16 +132,20 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
     required this.dayDetectorBuilder,
     required this.showHalfHours,
     required this.halfHourIndicatorSettings,
+    required this.startHour,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final fullDayEventList = controller.getFullDayEvent(date);
     return Container(
       height: height,
       width: width,
       child: Column(
         children: [
-          fullDayEventBuilder(controller.getFullDayEvent(date), date),
+          fullDayEventList.isEmpty
+              ? SizedBox.shrink()
+              : fullDayEventBuilder(fullDayEventList, date),
           Expanded(
             child: SingleChildScrollView(
               controller: scrollController,
@@ -150,16 +157,16 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                     CustomPaint(
                       size: Size(width, height),
                       painter: HourLinePainter(
-                        lineColor: hourIndicatorSettings.color,
-                        lineHeight: hourIndicatorSettings.height,
-                        offset: timeLineWidth + hourIndicatorSettings.offset,
-                        minuteHeight: heightPerMinute,
-                        verticalLineOffset: verticalLineOffset,
-                        showVerticalLine: showVerticalLine,
-                        lineStyle: hourIndicatorSettings.lineStyle,
-                        dashWidth: hourIndicatorSettings.dashWidth,
-                        dashSpaceWidth: hourIndicatorSettings.dashSpaceWidth,
-                      ),
+                          lineColor: hourIndicatorSettings.color,
+                          lineHeight: hourIndicatorSettings.height,
+                          offset: timeLineWidth + hourIndicatorSettings.offset,
+                          minuteHeight: heightPerMinute,
+                          verticalLineOffset: verticalLineOffset,
+                          showVerticalLine: showVerticalLine,
+                          lineStyle: hourIndicatorSettings.lineStyle,
+                          dashWidth: hourIndicatorSettings.dashWidth,
+                          dashSpaceWidth: hourIndicatorSettings.dashSpaceWidth,
+                          startHour: startHour),
                     ),
                     if (showHalfHours)
                       CustomPaint(
@@ -174,6 +181,7 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                           dashWidth: halfHourIndicatorSettings.dashWidth,
                           dashSpaceWidth:
                               halfHourIndicatorSettings.dashSpaceWidth,
+                          startHour: startHour,
                         ),
                       ),
                     dayDetectorBuilder(
@@ -194,6 +202,7 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                         heightPerMinute: heightPerMinute,
                         eventTileBuilder: eventTileBuilder,
                         scrollNotifier: scrollNotifier,
+                        startHour: startHour,
                         width: width -
                             timeLineWidth -
                             hourIndicatorSettings.offset -
@@ -207,6 +216,7 @@ class InternalDayViewPage<T extends Object?> extends StatelessWidget {
                       timeLineOffset: timeLineOffset,
                       timeLineWidth: timeLineWidth,
                       showHalfHours: showHalfHours,
+                      startHour: startHour,
                       key: ValueKey(heightPerMinute),
                     ),
                     if (showLiveLine && liveTimeIndicatorSettings.height > 0)

@@ -109,7 +109,10 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
   final EventScrollConfiguration scrollConfiguration;
 
   /// Display full day events.
-  final FullDayEventBuilder<T>? fullDayEventBuilder;
+  final FullDayEventBuilder<T> fullDayEventBuilder;
+
+  /// First hour displayed in the layout
+  final int startHour;
 
   /// A single page for week view.
   const InternalWeekViewPage({
@@ -141,7 +144,8 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
     required this.weekDays,
     required this.minuteSlotSize,
     required this.scrollConfiguration,
-    this.fullDayEventBuilder,
+    required this.startHour,
+    required this.fullDayEventBuilder,
     required this.weekDetectorBuilder,
   }) : super(key: key);
 
@@ -189,13 +193,19 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                 SizedBox(width: timeLineWidth + hourIndicatorSettings.offset),
                 ...List.generate(
                   filteredDates.length,
-                  (index) => SizedBox(
-                    width: weekTitleWidth,
-                    child: fullDayEventBuilder?.call(
-                      controller.getFullDayEvent(filteredDates[index]),
-                      dates[index],
-                    ),
-                  ),
+                  (index) {
+                    final fullDayEventList =
+                        controller.getFullDayEvent(filteredDates[index]);
+                    return fullDayEventList.isEmpty
+                        ? SizedBox.shrink()
+                        : SizedBox(
+                            width: weekTitleWidth,
+                            child: fullDayEventBuilder.call(
+                              fullDayEventList,
+                              dates[index],
+                            ),
+                          );
+                  },
                 )
               ],
             ),
@@ -211,13 +221,13 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                     CustomPaint(
                       size: Size(width, height),
                       painter: HourLinePainter(
-                        lineColor: hourIndicatorSettings.color,
-                        lineHeight: hourIndicatorSettings.height,
-                        offset: timeLineWidth + hourIndicatorSettings.offset,
-                        minuteHeight: heightPerMinute,
-                        verticalLineOffset: verticalLineOffset,
-                        showVerticalLine: showVerticalLine,
-                      ),
+                          lineColor: hourIndicatorSettings.color,
+                          lineHeight: hourIndicatorSettings.height,
+                          offset: timeLineWidth + hourIndicatorSettings.offset,
+                          minuteHeight: heightPerMinute,
+                          verticalLineOffset: verticalLineOffset,
+                          showVerticalLine: showVerticalLine,
+                          startHour: startHour),
                     ),
                     if (showLiveLine && liveTimeIndicatorSettings.height > 0)
                       LiveTimeIndicator(
@@ -264,6 +274,7 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                                       eventArranger: eventArranger,
                                       eventTileBuilder: eventTileBuilder,
                                       scrollNotifier: scrollConfiguration,
+                                      startHour: startHour,
                                       events: controller
                                           .getEventsOnDay(filteredDates[index]),
                                       heightPerMinute: heightPerMinute,
@@ -282,6 +293,7 @@ class InternalWeekViewPage<T extends Object?> extends StatelessWidget {
                       height: height,
                       timeLineOffset: timeLineOffset,
                       timeLineBuilder: timeLineBuilder,
+                      startHour: startHour,
                     ),
                   ],
                 ),
